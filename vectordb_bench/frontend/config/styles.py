@@ -71,6 +71,7 @@ DB_TO_ICON = {
     DB.Doris: "https://doris.apache.org/images/logo.svg",
     DB.TurboPuffer: "https://turbopuffer.com/logo2.png",
     DB.CockroachDB: "https://raw.githubusercontent.com/cockroachdb/cockroach/master/docs/media/cockroach_db.png",
+    DB.Endee: "data:image/svg+xml,%3c?xml%20version=%271.0%27%20encoding=%27UTF-8%27?%3e%3csvg%20id=%27Layer_1%27%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20viewBox=%270%200%20600%20600%27%3e%3c!--%20Generator:%20Adobe%20Illustrator%2030.0.0,%20SVG%20Export%20Plug-In%20.%20SVG%20Version:%202.1.1%20Build%20123)%20--%3e%3cdefs%3e%3cstyle%3e%20.st0%20{%20fill:%20%233266a4;%20}%20%3c/style%3e%3c/defs%3e%3cpath%20class=%27st0%27%20d=%27M106.22,490.02H10.36l-.04-184.85c11.19-163.31,232.1-211.74,306.42-61.94,23.96,48.3,15.59,99.83,17,152.01h61.62c15.25,0,42.7-13.75,54.75-23.2,66.11-51.86,57.28-158.2-16.28-198.49-9.65-5.28-33.16-14.19-43.74-14.19h-154.31v-91.09c0-.87,2.55-1.86,3.63-1.63,104.05,4.23,201.15-21.64,284.48,55.84,119.18,110.8,69.12,325.47-91.33,362.6-28.65,6.63-85.47,7.76-115.02,4.8-19.71-1.97-43.29-16.57-55.97-31.45-37.98-44.56-20.77-98.07-24.7-151.16-5.18-69.99-100-85.31-125.9-20.47-1.16,2.92-4.76,13.88-4.76,16.3v186.91Z%27/%3e%3c/svg%3e",
 }
 
 # RedisCloud color: #0D6EFD
