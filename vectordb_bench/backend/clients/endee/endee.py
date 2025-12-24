@@ -22,6 +22,7 @@ class Endee(VectorDB):
 
         self.token = db_config.get("token", "")
         self.region = db_config.get("region", "india-west-1")
+        self.base_url = db_config.get("base_url")
         
         # self.collection_name = db_config.get("collection_name", "")
         self.collection_name = (db_config.get("collection_name") or db_config.get("index_name"))
@@ -39,9 +40,20 @@ class Endee(VectorDB):
         self.ef_search = db_config.get("ef_search")
         self.nd = endee.Endee(token=self.token)
 
-        # Using Base url
-        # self.nd.base_url = "https://10.160.0.8:8080"
+        # Dynamically set the URL
+        if self.base_url:
+            self.nd.set_base_url(self.base_url)
+            log.info(f"Targeting server: {self.base_url}")
 
+        # Using Base url
+        # self.nd.base_url = "http://10.128.0.3:8080/api/v1"
+        # self.nd.set_base_url("http://10.128.0.3:8080/api/v1")
+        # self.nd.set_base_url("http://3.85.217.253:80/api/v1")
+        # self.nd.set_base_url("http://10.128.0.5:8080/api/v1")
+        # self.nd.set_base_url("http://54.89.169.48:80/api/v1")
+
+
+        # BASE_URL="http://3.85.217.253:80/api/v1"
 
         # try:
         #     indices = self.nd.list_indexes().get("indices", [])
@@ -124,8 +136,16 @@ class Endee(VectorDB):
             # log.info(f"Token: {self.token}")
             nd = endee.Endee(token=self.token)
             # Uncomment below to use base_url
-            # nd.base_url = "https://10.160.0.8:8080"
-            # self.nd = nd
+            # nd.base_url = "http://10.128.0.3:8080/api/v1"
+            # nd.set_base_url("http://10.128.0.3:8080/api/v1")
+            # nd.set_base_url("http://3.85.217.253:80/api/v1")
+            # nd.set_base_url("http://10.128.0.5:8080/api/v1")
+            # nd.set_base_url("http://54.89.169.48:80/api/v1")
+
+            if self.base_url:
+                nd.set_base_url(self.base_url)
+            self.nd = nd
+
             self.index = nd.get_index(name=self.collection_name)
             yield
         except Exception as e:

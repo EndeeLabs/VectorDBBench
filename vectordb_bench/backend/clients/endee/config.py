@@ -6,6 +6,7 @@ from ..api import DBConfig
 class EndeeConfig(DBConfig):
     token: SecretStr
     region: Optional[str] = "india-west-1"
+    base_url: str = "http://127.0.0.1:8080/api/v1"  # Default value
     space_type: str ="cosine"
     # use_fp16: bool = False
     precision: str = "medium"
@@ -20,6 +21,7 @@ class EndeeConfig(DBConfig):
         return {
             "token": self.token.get_secret_value(),
             "region": self.region,
+            "base_url": self.base_url,
             "space_type": self.space_type,
             # "use_fp16": self.use_fp16,
             "precision": self.precision,

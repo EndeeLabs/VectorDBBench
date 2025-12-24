@@ -26,6 +26,10 @@ class EndeeTypedDict(CommonTypedDict):
         str, 
         click.option("--region", type=str, default=None, help="Endee region", show_default=True)
     ]
+    base_url: Annotated[
+        str, 
+        click.option("--base-url", type=str, default="http://127.0.0.1:8080/api/v1", help="API server URL", show_default=True)
+    ]
     space_type: Annotated[
         str, 
         click.option("--space-type", type=click.Choice(["cosine", "l2", "dot_product"]), default="cosine", help="Distance metric", show_default=True)

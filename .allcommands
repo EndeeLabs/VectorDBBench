@@ -1,0 +1,70 @@
+# FOR CREATING A NEW INDEX AND START THE PROCESS
+DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
+  --token "as1prod:nb5l9VEBrgDEsvjut8Oawgcbf5jghoN5" \
+  --region india-west-1 \
+  --base-url "https://as1.endee.io/api/v1" \
+  --index-name test_prod_10M_medium_3 \
+  --task-label "20251224" \
+  --m 16 \
+  --ef-con 128 \
+  --ef-search 128 \
+  --space-type cosine \
+  --precision medium \
+  --version 1 \
+  --case-type Performance768D10M \
+  --k 30 \
+  --num-concurrency "8" \
+  --concurrency-duration 30 \
+  --concurrency-timeout 3600 \
+  --drop-old \
+  --load \
+  --search-concurrent \
+  --search-serial
+
+PROD: "https://as1.endee.io/api/v1"
+AWS: http://54.89.169.48:80/api/v1
+
+  DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
+  --token "awsbench16:uVQMSo85De3k1lN5FiZI0xKcwXDlyBvu" \
+  --region india-west-1 \
+  --base-url "http://54.89.169.48:80/api/v1"\
+  --index-name test_aws_10M_medium_1 \
+  --task-label "20251223" \
+  --m 16 \
+  --ef-con 128 \
+  --ef-search 128 \
+  --space-type cosine \
+  --precision medium \
+  --version 1 \
+  --case-type Performance768D10M \
+  --k 30 \
+  --num-concurrency "8" \
+  --concurrency-duration 30 \
+  --concurrency-timeout 3600 \
+  --drop-old \
+  --load \
+  --search-concurrent \
+  --search-serial
+
+# FOR USING THE EXISTING INDEX
+DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
+  --token "as1prod:nb5l9VEBrgDEsvjut8Oawgcbf5jghoN5" \
+  --region india-west-1 \
+  --base-url "https://as1.endee.io/api/v1" \
+  --index-name test_prod_10M_medium_3 \
+  --task-label "20251224" \
+  --m 16 \
+  --ef-con 128 \
+  --ef-search 128 \
+  --space-type cosine \
+  --precision medium \
+  --version 1 \
+  --case-type Performance768D10M \
+  --k 30 \
+  --num-concurrency "8" \
+  --concurrency-duration 30 \
+  --concurrency-timeout 3600 \
+  --skip-drop-old \
+  --skip-load \
+  --search-concurrent \
+  --search-serial
