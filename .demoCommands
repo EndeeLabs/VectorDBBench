@@ -1,6 +1,6 @@
 # FOR CREATING A NEW INDEX AND START THE PROCESS
 DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
-  --token "as1prod:nb5l9VEBrgDEsvjut8Oawgcbf5jghoN5" \
+  --token "TOKEN" \
   --region india-west-1 \
   --base-url "https://as1.endee.io/api/v1" \
   --index-name test_prod_10M_medium_3 \
@@ -21,11 +21,10 @@ DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
   --search-concurrent \
   --search-serial
 
-PROD: "https://as1.endee.io/api/v1"
-AWS: http://54.89.169.48:80/api/v1
+========================================================================
 
   DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
-  --token "awsbench16:uVQMSo85De3k1lN5FiZI0xKcwXDlyBvu" \
+  --token "TOKEN" \
   --region india-west-1 \
   --base-url "http://54.89.169.48:80/api/v1"\
   --index-name test_aws_10M_medium_1 \
@@ -46,9 +45,11 @@ AWS: http://54.89.169.48:80/api/v1
   --search-concurrent \
   --search-serial
 
+========================================================================
+
 # FOR USING THE EXISTING INDEX
 DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
-  --token "as1prod:nb5l9VEBrgDEsvjut8Oawgcbf5jghoN5" \
+  --token "TOKEN" \
   --region india-west-1 \
   --base-url "https://as1.endee.io/api/v1" \
   --index-name test_prod_10M_medium_3 \
