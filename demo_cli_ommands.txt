@@ -1,9 +1,11 @@
+# ========================================================================
 # FOR CREATING A NEW INDEX AND START THE PROCESS
-DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
+# ========================================================================
+DATASET_LOCAL_DIR="/home/admin/vectordataset" vectordbbench endee \
   --token "TOKEN" \
   --region india-west-1 \
   --base-url "https://as1.endee.io/api/v1" \
-  --index-name test_prod_10M_medium_3 \
+  --index-name test_index_name \
   --task-label "20251224" \
   --m 16 \
   --ef-con 128 \
@@ -21,38 +23,16 @@ DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
   --search-concurrent \
   --search-serial
 
-========================================================================
 
-  DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
-  --token "TOKEN" \
-  --region india-west-1 \
-  --base-url "http://54.89.169.48:80/api/v1"\
-  --index-name test_aws_10M_medium_1 \
-  --task-label "20251223" \
-  --m 16 \
-  --ef-con 128 \
-  --ef-search 128 \
-  --space-type cosine \
-  --precision medium \
-  --version 1 \
-  --case-type Performance768D10M \
-  --k 30 \
-  --num-concurrency "8" \
-  --concurrency-duration 30 \
-  --concurrency-timeout 3600 \
-  --drop-old \
-  --load \
-  --search-concurrent \
-  --search-serial
 
-========================================================================
-
+# ========================================================================
 # FOR USING THE EXISTING INDEX
-DATASET_LOCAL_DIR="/home/shaleen/vectordataset" vectordbbench endee \
+# ========================================================================
+DATASET_LOCAL_DIR="/home/admin/vectordataset" vectordbbench endee \
   --token "TOKEN" \
   --region india-west-1 \
   --base-url "https://as1.endee.io/api/v1" \
-  --index-name test_prod_10M_medium_3 \
+  --index-name test_index_name\
   --task-label "20251224" \
   --m 16 \
   --ef-con 128 \
