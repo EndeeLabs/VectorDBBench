@@ -36,7 +36,7 @@ class EndeeTypedDict(CommonTypedDict):
     ]
     precision: Annotated[
         str, 
-        click.option("--precision", type=click.Choice(["medium", "high", "ultra-high", "fp16"]), default="medium", help="Quant Level", show_default=True)
+        click.option("--precision", type=click.Choice(["medium", "high", "ultra-high", "fp16", "small"]), default="medium", help="Quant Level", show_default=True)
     ]
     version: Annotated[
         int, 
