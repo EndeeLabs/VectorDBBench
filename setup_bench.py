@@ -3,6 +3,185 @@ import sys
 import os
 import shutil
 
+# ================= CONFIGURATION =================
+REPO_URL = "https://github.com/EndeeLabs/VectorDBBench.git"
+REPO_DIR = "VectorDBBench"
+PYTHON_VERSION = "3.11.9"
+# =================================================
+
+def run_command(command, shell=False, cwd=None):
+    """Runs a shell command and exits on failure."""
+    cmd_str = ' '.join(command) if isinstance(command, list) else command
+    print(f"--> [EXEC]: {cmd_str}")
+    try:
+        subprocess.check_call(command, shell=shell, cwd=cwd)
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing command: {e}")
+        sys.exit(1)
+
+def is_python311_installed():
+    """Checks if python3.11 is currently available in the system PATH."""
+    # Check standard PATH
+    if shutil.which("python3.11") is not None:
+        return True
+    
+    # Check common local install location (Source builds often go here)
+    if os.path.exists("/usr/local/bin/python3.11"):
+        return True
+        
+    return False
+
+def check_system_compatibility():
+    """Ensures we are on a Debian-based system (Debian, Ubuntu, Mint, Kali, etc)."""
+    if shutil.which("apt-get") is None:
+        print("\n!!! CRITICAL ERROR !!!")
+        print("This script relies on 'apt-get'. It works on Debian, Ubuntu, Linux Mint, Kali, Pop!_OS, etc.")
+        sys.exit(1)
+
+def is_ubuntu():
+    """Returns True only if we are confident this is Ubuntu."""
+    try:
+        if os.path.exists("/etc/os-release"):
+            with open("/etc/os-release") as f:
+                if "ubuntu" in f.read().lower():
+                    return True
+        if shutil.which("lsb_release"):
+            out = subprocess.check_output(["lsb_release", "-i"]).decode().lower()
+            if "ubuntu" in out:
+                return True
+    except:
+        pass
+    return False
+
+def install_python_ubuntu_strategy():
+    """Strategy A: Ubuntu (Fast PPA)"""
+    print("\n[Strategy] Detected Ubuntu. Using fast PPA installation...")
+    run_command("sudo apt-get update", shell=True)
+    run_command("sudo apt-get install -y software-properties-common git", shell=True)
+    print("Adding Deadsnakes PPA...")
+    run_command("sudo add-apt-repository -y ppa:deadsnakes/ppa", shell=True)
+    run_command("sudo apt-get update", shell=True)
+    run_command("sudo apt-get install -y python3.11 python3.11-venv python3.11-dev", shell=True)
+
+def install_python_debian_strategy():
+    """Strategy B: Debian / Universal (Source Build Fallback)"""
+    print("\n[Strategy] Detected Debian/Other. Using robust compatibility mode...")
+
+    # 1. Install Dependencies
+    run_command("sudo apt-get update", shell=True)
+    print("Installing build dependencies...")
+    deps = [
+        "git", "wget", "build-essential", "zlib1g-dev", "libncurses5-dev", 
+        "libgdbm-dev", "libnss3-dev", "libssl-dev", "libreadline-dev", 
+        "libffi-dev", "libsqlite3-dev", "libbz2-dev", "pkg-config"
+    ]
+    run_command(f"sudo apt-get install -y {' '.join(deps)}", shell=True)
+
+    # 2. Try APT first (Debian 12+)
+    print("Checking system repos for Python 3.11...")
+    try:
+        subprocess.check_call("apt-cache show python3.11", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print("Python 3.11 found in APT. Installing...")
+        run_command("sudo apt-get install -y python3.11 python3.11-venv python3.11-dev", shell=True)
+        return
+    except subprocess.CalledProcessError:
+        print("Python 3.11 not in system repos. Proceeding to Source Build.")
+
+    # 3. Source Build (Universal)
+    print("\n*** STARTING SOURCE BUILD ***")
+    tarball = f"Python-{PYTHON_VERSION}.tgz"
+    url = f"https://www.python.org/ftp/python/{PYTHON_VERSION}/{tarball}"
+
+    if not os.path.exists(tarball):
+        run_command(f"wget {url}", shell=True)
+    
+    run_command(f"tar -xf {tarball}", shell=True)
+    src_dir = f"Python-{PYTHON_VERSION}"
+    
+    # Configure & Make
+    run_command("./configure --enable-optimizations", shell=True, cwd=src_dir)
+    nproc = subprocess.check_output("nproc", shell=True).decode().strip()
+    run_command(f"make -j {nproc}", shell=True, cwd=src_dir)
+    
+    # SAFE INSTALL (altinstall)
+    run_command("sudo make altinstall", shell=True, cwd=src_dir)
+    
+    # Cleanup
+    os.remove(tarball)
+    run_command(f"sudo rm -rf {src_dir}", shell=True)
+
+def setup_project_and_venv():
+    print("\n[Project] Setting up VectorDBBench...")
+    
+    # 1. Clone
+    if not os.path.exists(REPO_DIR):
+        run_command(["git", "clone", REPO_URL])
+    
+    os.chdir(REPO_DIR)
+    
+    # 2. Switch Branch
+    run_command(["git", "fetch", "origin"])
+    run_command(["git", "checkout", "Endee"])
+    run_command(["git", "pull", "origin", "Endee"])
+
+    # 3. Locate Python 3.11
+    python_bin = "python3.11"
+    if shutil.which("python3.11") is None:
+        if os.path.exists("/usr/local/bin/python3.11"):
+            python_bin = "/usr/local/bin/python3.11"
+        else:
+            print("Error: Python 3.11 binary not found after installation attempt.")
+            sys.exit(1)
+            
+    print(f"Using Python binary: {python_bin}")
+
+    # 4. Create Venv
+    if not os.path.exists("venv"):
+        run_command([python_bin, "-m", "venv", "venv"])
+    else:
+        print("Virtual environment already exists.")
+
+    # 5. Install Deps
+    venv_pip = os.path.join("venv", "bin", "pip")
+    run_command([venv_pip, "install", "--upgrade", "pip"])
+    run_command([venv_pip, "install", "endee"])
+    run_command([venv_pip, "install", "-e", "."])
+    
+    return os.path.join(os.getcwd(), "venv")
+
+if __name__ == "__main__":
+    check_system_compatibility()
+
+    # --- THE FIX IS HERE ---
+    if is_python311_installed():
+        print("\n" + "="*50)
+        print("SKIP: Python 3.11 is already installed.")
+        print("="*50)
+    else:
+        # Only install if missing
+        if is_ubuntu():
+            install_python_ubuntu_strategy()
+        else:
+            install_python_debian_strategy()
+    # -----------------------
+
+    venv_path = setup_project_and_venv()
+
+    print("\n" + "="*50)
+    print("SETUP SUCCESSFUL!")
+    print(f"To start: source {os.path.join(venv_path, 'bin', 'activate')}")
+    print("="*50)
+
+
+
+
+
+'''
+import subprocess
+import sys
+import os
+import shutil
+
 def run_command(command, shell=False):
     """Runs a shell command and raises an exception on failure."""
     print(f"--> Running: {' '.join(command) if isinstance(command, list) else command}")
@@ -110,3 +289,5 @@ if __name__ == "__main__":
     print("To start using VectorDBBench, run the following command in your shell:")
     print(f"\n    source {os.path.join(project_path, 'venv/bin/activate')}\n")
     print("="*50)
+
+'''
