@@ -78,20 +78,19 @@ def Endee(**parameters):
         collection_name = f"endee_bench_{uuid.uuid4().hex[:8]}"
 
     # Filter out None values before creating config
-    params_for_vecx = {k: v for k, v in parameters.items() if v is not None}
-    db_config = EndeeConfig(**params_for_vecx)
+    params_for_nd = {k: v for k, v in parameters.items() if v is not None}
+    db_config = EndeeConfig(**params_for_nd)
 
     custom_case_config = get_custom_case_config(parameters)
 
     # Create task config
     from vectordb_bench.models import TaskConfig, CaseConfig, CaseType, ConcurrencySearchConfig
     
-    # Create an instance of EmptyDBCaseConfig instead of passing None
     db_case_config = EmptyDBCaseConfig()
     
     task = TaskConfig(
         db=DB.Endee,
-        db_config=db_config,  # Use the EndeeConfig instance directly
+        db_config=db_config,
         db_case_config=db_case_config,
         case_config=CaseConfig(
             case_id=CaseType[parameters["case_type"]],
@@ -99,6 +98,7 @@ def Endee(**parameters):
             concurrency_search_config=ConcurrencySearchConfig(
                 concurrency_duration=parameters["concurrency_duration"],
                 num_concurrency=[int(s) for s in parameters["num_concurrency"]],
+                concurrency_timeout=parameters["concurrency_timeout"], # ========== Added this ==========
             ),
             custom_case=custom_case_config,
         ),
@@ -107,13 +107,46 @@ def Endee(**parameters):
     
     # Use the run method of the benchmark_runner object
     if not parameters["dry_run"]:
-        benchmark_runner.run([task])
+        # --- TASK LABEL LOGIC START ---
+        # 1. Generate a unique run ID
+        run_uuid = uuid.uuid4().hex
+
+        # 2. Pick the base name: Use --task-label if provided, else --index-name
+        base_name = parameters.get("task_label")
+        if not base_name:
+            base_name = parameters.get("index_name", "endee")
+
+        # 3. Combine into the final label: "MyLabel_UUID"
+        final_label = f"{base_name}_{run_uuid}"
+
+        # 4. Pass the label to the runner to ensure the filename is correct
+        benchmark_runner.run([task], final_label)
+        # --- TASK LABEL LOGIC END ---
         
-        # Wait for task to complete if needed
+        # Wait for task to complete
         import time
         from vectordb_bench.interface import global_result_future
         from concurrent.futures import wait
         
         time.sleep(5)
         if global_result_future:
-            wait([global_result_future]) 
+            wait([global_result_future])
+
+        # Ensure CLI doesn't close while background processes are active
+        while benchmark_runner.has_running():
+            time.sleep(1)
+
+
+    
+#     # Use the run method of the benchmark_runner object
+#     if not parameters["dry_run"]:
+#         benchmark_runner.run([task])
+        
+#         # Wait for task to complete if needed
+#         import time
+#         from vectordb_bench.interface import global_result_future
+#         from concurrent.futures import wait
+        
+#         time.sleep(5)
+#         if global_result_future:
+#             wait([global_result_future]) 
