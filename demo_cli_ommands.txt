@@ -4,16 +4,16 @@
 DATASET_LOCAL_DIR="/home/admin/vectordataset" vectordbbench endee \
   --token "TOKEN" \
   --region india-west-1 \
-  --base-url "https://as1.endee.io/api/v1" \
+  --base-url "http://127.0.0.1:8080/api/v1" \
   --index-name test_index_name \
-  --task-label "20251224" \
+  --task-label "20260107" \
   --m 16 \
   --ef-con 128 \
   --ef-search 128 \
   --space-type cosine \
-  --precision medium \
+  --precision int8d \
   --version 1 \
-  --case-type Performance768D10M \
+  --case-type Performance768D1M \
   --k 30 \
   --num-concurrency "8" \
   --concurrency-duration 30 \
@@ -31,16 +31,16 @@ DATASET_LOCAL_DIR="/home/admin/vectordataset" vectordbbench endee \
 DATASET_LOCAL_DIR="/home/admin/vectordataset" vectordbbench endee \
   --token "TOKEN" \
   --region india-west-1 \
-  --base-url "https://as1.endee.io/api/v1" \
+  --base-url "http://127.0.0.1:8080/api/v1" \
   --index-name test_index_name\
-  --task-label "20251224" \
+  --task-label "20260107" \
   --m 16 \
   --ef-con 128 \
   --ef-search 128 \
   --space-type cosine \
-  --precision medium \
+  --precision int8d \
   --version 1 \
-  --case-type Performance768D10M \
+  --case-type Performance768D1M \
   --k 30 \
   --num-concurrency "8" \
   --concurrency-duration 30 \
@@ -57,16 +57,16 @@ DATASET_LOCAL_DIR="/home/admin/vectordataset" vectordbbench endee \
 NUM_PER_BATCH=10000 DATASET_LOCAL_DIR="/home/admin/vectordataset" vectordbbench endee \
   --token "TOKEN" \
   --region india-west-1 \
-  --base-url "https://as1.endee.io/api/v1" \
+  --base-url "http://127.0.0.1:8080/api/v1" \
   --index-name test_index_name \
-  --task-label "20251224" \
+  --task-label "20260107" \
   --m 16 \
   --ef-con 128 \
   --ef-search 128 \
   --space-type cosine \
-  --precision medium \
+  --precision int8d \
   --version 1 \
-  --case-type Performance768D10M \
+  --case-type Performance768D1M \
   --k 30 \
   --num-concurrency "8" \
   --concurrency-duration 30 \
