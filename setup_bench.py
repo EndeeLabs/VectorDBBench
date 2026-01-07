@@ -1,7 +1,9 @@
-import subprocess
 import sys
 import os
+import subprocess
 import shutil
+import platform
+import urllib.request
 
 # ================= CONFIGURATION =================
 REPO_URL = "https://github.com/EndeeLabs/VectorDBBench.git"
@@ -11,107 +13,145 @@ PYTHON_VERSION = "3.11.9"
 
 def run_command(command, shell=False, cwd=None):
     """Runs a shell command and exits on failure."""
+    use_shell = shell
+    # On Windows, list commands usually need shell=True to find executables
+    if platform.system() == "Windows" and isinstance(command, list):
+        use_shell = True
+        
     cmd_str = ' '.join(command) if isinstance(command, list) else command
     print(f"--> [EXEC]: {cmd_str}")
+    
     try:
-        subprocess.check_call(command, shell=shell, cwd=cwd)
+        subprocess.check_call(command, shell=use_shell, cwd=cwd)
     except subprocess.CalledProcessError as e:
         print(f"Error executing command: {e}")
         sys.exit(1)
 
-def is_python311_installed():
-    """Checks if python3.11 is currently available in the system PATH."""
-    # Check standard PATH
-    if shutil.which("python3.11") is not None:
-        return True
+def get_os_type():
+    """Returns 'windows', 'macos', or 'linux'."""
+    os_name = platform.system().lower()
     
-    # Check common local install location (Source builds often go here)
-    if os.path.exists("/usr/local/bin/python3.11"):
-        return True
-        
-    return False
+    if "darwin" in os_name:
+        return "macos"
+    elif "win" in os_name:
+        return "windows"
+    return "linux"
 
-def check_system_compatibility():
-    """Ensures we are on a Debian-based system (Debian, Ubuntu, Mint, Kali, etc)."""
-    if shutil.which("apt-get") is None:
-        print("\n!!! CRITICAL ERROR !!!")
-        print("This script relies on 'apt-get'. It works on Debian, Ubuntu, Linux Mint, Kali, Pop!_OS, etc.")
-        sys.exit(1)
+def find_python311():
+    """Finds python3.11 executable path cross-platform."""
+    candidates = []
+    
+    if get_os_type() == "windows":
+        candidates = ["py", "python", "python3.11"]
+    else:
+        # Check standard PATH first, then explicit locations
+        candidates = ["python3.11", "/usr/bin/python3.11", "/usr/local/bin/python3.11", "/opt/homebrew/bin/python3.11"]
 
-def is_ubuntu():
-    """Returns True only if we are confident this is Ubuntu."""
+    for cmd in candidates:
+        path = shutil.which(cmd)
+        if path:
+            try:
+                # Verify it is actually 3.11
+                # We use --version to check the actual output
+                ver = subprocess.check_output([path, "--version"]).decode().strip()
+                if "3.11" in ver:
+                    return path
+            except:
+                continue
+    return None
+
+def install_linux_strategy():
+    """Installs Python 3.11 on Linux (Ubuntu PPA or Debian Source)."""
+    print("\n[Linux] Python 3.11 not found. Determining installation strategy...")
+    
+    if not shutil.which("apt-get"):
+         print("Error: This script requires 'apt-get' (Debian/Ubuntu/Mint/Kali).")
+         sys.exit(1)
+
+    # 1. Detect Ubuntu (Use PPA for speed)
+    is_ubuntu = False
     try:
         if os.path.exists("/etc/os-release"):
             with open("/etc/os-release") as f:
                 if "ubuntu" in f.read().lower():
-                    return True
-        if shutil.which("lsb_release"):
-            out = subprocess.check_output(["lsb_release", "-i"]).decode().lower()
-            if "ubuntu" in out:
-                return True
+                    is_ubuntu = True
     except:
         pass
-    return False
 
-def install_python_ubuntu_strategy():
-    """Strategy A: Ubuntu (Fast PPA)"""
-    print("\n[Strategy] Detected Ubuntu. Using fast PPA installation...")
     run_command("sudo apt-get update", shell=True)
-    run_command("sudo apt-get install -y software-properties-common git", shell=True)
-    print("Adding Deadsnakes PPA...")
-    run_command("sudo add-apt-repository -y ppa:deadsnakes/ppa", shell=True)
-    run_command("sudo apt-get update", shell=True)
-    run_command("sudo apt-get install -y python3.11 python3.11-venv python3.11-dev", shell=True)
 
-def install_python_debian_strategy():
-    """Strategy B: Debian / Universal (Source Build Fallback)"""
-    print("\n[Strategy] Detected Debian/Other. Using robust compatibility mode...")
+    if is_ubuntu:
+        print("Detected Ubuntu. Attempting PPA install...")
+        try:
+            run_command("sudo apt-get install -y software-properties-common", shell=True)
+            run_command("sudo add-apt-repository -y ppa:deadsnakes/ppa", shell=True)
+            run_command("sudo apt-get update", shell=True)
+            run_command("sudo apt-get install -y python3.11 python3.11-venv python3.11-dev", shell=True)
+            return
+        except Exception as e:
+            print(f"Ubuntu PPA failed ({e}). Falling back to source build.")
 
-    # 1. Install Dependencies
-    run_command("sudo apt-get update", shell=True)
-    print("Installing build dependencies...")
+    # 2. Debian/Fallback Strategy (Source Build)
+    print("Detected Debian/Other. Using Source Build (Robust Method)...")
+    
+    # Install Build Dependencies
     deps = [
-        "git", "wget", "build-essential", "zlib1g-dev", "libncurses5-dev", 
+        "wget", "build-essential", "zlib1g-dev", "libncurses5-dev", 
         "libgdbm-dev", "libnss3-dev", "libssl-dev", "libreadline-dev", 
         "libffi-dev", "libsqlite3-dev", "libbz2-dev", "pkg-config"
     ]
     run_command(f"sudo apt-get install -y {' '.join(deps)}", shell=True)
-
-    # 2. Try APT first (Debian 12+)
-    print("Checking system repos for Python 3.11...")
-    try:
-        subprocess.check_call("apt-cache show python3.11", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print("Python 3.11 found in APT. Installing...")
-        run_command("sudo apt-get install -y python3.11 python3.11-venv python3.11-dev", shell=True)
-        return
-    except subprocess.CalledProcessError:
-        print("Python 3.11 not in system repos. Proceeding to Source Build.")
-
-    # 3. Source Build (Universal)
-    print("\n*** STARTING SOURCE BUILD ***")
+    
+    # Download & Build
     tarball = f"Python-{PYTHON_VERSION}.tgz"
     url = f"https://www.python.org/ftp/python/{PYTHON_VERSION}/{tarball}"
-
+    
     if not os.path.exists(tarball):
         run_command(f"wget {url}", shell=True)
     
     run_command(f"tar -xf {tarball}", shell=True)
     src_dir = f"Python-{PYTHON_VERSION}"
     
-    # Configure & Make
+    # Configure & Install
+    # --enable-optimizations is standard for production python builds
     run_command("./configure --enable-optimizations", shell=True, cwd=src_dir)
     nproc = subprocess.check_output("nproc", shell=True).decode().strip()
     run_command(f"make -j {nproc}", shell=True, cwd=src_dir)
     
-    # SAFE INSTALL (altinstall)
+    # CRITICAL: Use altinstall to avoid overwriting /usr/bin/python3
     run_command("sudo make altinstall", shell=True, cwd=src_dir)
     
     # Cleanup
     os.remove(tarball)
     run_command(f"sudo rm -rf {src_dir}", shell=True)
 
-def setup_project_and_venv():
-    print("\n[Project] Setting up VectorDBBench...")
+def install_macos_strategy():
+    print("\n[macOS] Installing Python 3.11 via Homebrew...")
+    if shutil.which("brew") is None:
+        print("Error: Homebrew not found. Please install it from brew.sh")
+        sys.exit(1)
+    run_command("brew install python@3.11", shell=True)
+
+def install_windows_strategy():
+    print("\n[Windows] Installing Python 3.11 via Winget/Installer...")
+    # Try Winget first (standard on Win 10/11)
+    if shutil.which("winget"):
+        try:
+            run_command("winget install -e --id Python.Python.3.11", shell=True)
+            return
+        except:
+            pass
+    
+    # Fallback to direct download
+    installer = "python-3.11.9-amd64.exe"
+    url = f"https://www.python.org/ftp/python/3.11.9/{installer}"
+    print(f"Downloading {url}...")
+    urllib.request.urlretrieve(url, installer)
+    run_command([installer, "/quiet", "InstallAllUsers=1", "PrependPath=1"])
+    os.remove(installer)
+
+def setup_project(python_exe):
+    print(f"\n[Project] Setting up repo using found Python: {python_exe}")
     
     # 1. Clone
     if not os.path.exists(REPO_DIR):
@@ -119,57 +159,77 @@ def setup_project_and_venv():
     
     os.chdir(REPO_DIR)
     
-    # 2. Switch Branch
+    # 2. Checkout Branch
     run_command(["git", "fetch", "origin"])
     run_command(["git", "checkout", "Endee"])
     run_command(["git", "pull", "origin", "Endee"])
 
-    # 3. Locate Python 3.11
-    python_bin = "python3.11"
-    if shutil.which("python3.11") is None:
-        if os.path.exists("/usr/local/bin/python3.11"):
-            python_bin = "/usr/local/bin/python3.11"
-        else:
-            print("Error: Python 3.11 binary not found after installation attempt.")
-            sys.exit(1)
-            
-    print(f"Using Python binary: {python_bin}")
-
-    # 4. Create Venv
+    # 3. Create Venv
     if not os.path.exists("venv"):
-        run_command([python_bin, "-m", "venv", "venv"])
+        print("Creating virtual environment...")
+        run_command([python_exe, "-m", "venv", "venv"])
     else:
-        print("Virtual environment already exists.")
+        print("Virtual environment already exists. Skipping creation.")
 
-    # 5. Install Deps
-    venv_pip = os.path.join("venv", "bin", "pip")
+    # 4. Install Deps
+    # Check OS *again* here to determine correct PIP path
+    if get_os_type() == "windows":
+        venv_pip = os.path.join("venv", "Scripts", "pip.exe")
+    else:
+        # MacOS and Linux use this path
+        venv_pip = os.path.join("venv", "bin", "pip")
+
+    print(f"Installing dependencies using: {venv_pip}")
     run_command([venv_pip, "install", "--upgrade", "pip"])
     run_command([venv_pip, "install", "endee"])
     run_command([venv_pip, "install", "-e", "."])
     
-    return os.path.join(os.getcwd(), "venv")
+    return venv_pip
 
 if __name__ == "__main__":
-    check_system_compatibility()
+    # 0. Check Git
+    if shutil.which("git") is None:
+        print("Error: Git is not installed.")
+        if get_os_type() == "linux":
+            run_command("sudo apt-get update && sudo apt-get install -y git", shell=True)
+        else:
+            sys.exit(1)
 
-    # --- THE FIX IS HERE ---
-    if is_python311_installed():
+    # 1. Check for Existing Python 3.11
+    py_path = find_python311()
+
+    if py_path:
         print("\n" + "="*50)
-        print("SKIP: Python 3.11 is already installed.")
+        print(f"FOUND PYTHON 3.11: {py_path}")
+        print("Skipping OS installation steps.")
         print("="*50)
     else:
-        # Only install if missing
-        if is_ubuntu():
-            install_python_ubuntu_strategy()
-        else:
-            install_python_debian_strategy()
-    # -----------------------
+        # Install if missing
+        os_type = get_os_type()
+        if os_type == "linux":
+            install_linux_strategy()
+        elif os_type == "macos":
+            install_macos_strategy()
+        elif os_type == "windows":
+            install_windows_strategy()
+        
+        # Verify installation
+        py_path = find_python311()
+        if not py_path:
+            print("Error: Installation failed or binary not found.")
+            sys.exit(1)
 
-    venv_path = setup_project_and_venv()
+    # 2. Setup Project
+    setup_project(py_path)
 
     print("\n" + "="*50)
     print("SETUP SUCCESSFUL!")
-    print(f"To start: source {os.path.join(venv_path, 'bin', 'activate')}")
+    print("="*50)
+    
+    if get_os_type() == "windows":
+        print(f"To start: {os.path.join(os.getcwd(), 'venv', 'Scripts', 'activate')}")
+    else:
+        print(f"To start: source {os.path.join(os.getcwd(), 'venv', 'bin', 'activate')}")
     print("="*50)
 
 
