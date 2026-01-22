@@ -116,7 +116,7 @@ DATASET_LOCAL_DIR="/Users/darshan/Documents/VectorDBBench/vectordataset" vectord
   --version 1 \
   --case-type NewIntFilterPerformanceCase \
   --dataset-with-size-type "Medium Cohere (768dim, 1M)" \
-  --filter-rate 0.01 \
+  --filter-rate 0.99 \
   --k 30 \
   --num-concurrency "8" \
   --concurrency-duration 30 \
@@ -148,5 +148,54 @@ DATASET_LOCAL_DIR="/Users/darshan/Documents/VectorDBBench/vectordataset_label_fi
   --concurrency-timeout 3600 \
   --drop-old \
   --load \
+  --search-concurrent \
+  --search-serial
+
+
+    DATASET_LOCAL_DIR="/Users/darshan/Documents/VectorDBBench/vectordataset" vectordbbench endee \
+  --token "x6zdfkgq:pd6fnXWS8e2ZkqAUNFBfirYcHqFShXgR:dev" \
+  --region india-west-1 \
+  --base-url "https://dev.endee.io/api/v1" \
+  --index-name test_1M_numfilter_1p \
+  --task-label "20260107" \
+  --m 16 \
+  --ef-con 128 \
+  --ef-search 128 \
+  --space-type cosine \
+  --precision int8d \
+  --version 1 \
+  --case-type NewIntFilterPerformanceCase \
+  --dataset-with-size-type "Medium Cohere (768dim, 1M)" \
+  --filter-rate 0.01 \
+  --k 30 \
+  --num-concurrency "8" \
+  --concurrency-duration 30 \
+  --concurrency-timeout 3600 \
+  --skip-drop-old \
+  --skip-load \
+  --search-concurrent \
+  --search-serial
+
+  DATASET_LOCAL_DIR="/Users/darshan/Documents/VectorDBBench/vectordataset_label_filter" vectordbbench endee \
+  --token "x6zdfkgq:pd6fnXWS8e2ZkqAUNFBfirYcHqFShXgR:dev" \
+  --region india-west-1 \
+  --base-url "https://dev.endee.io/api/v1" \
+  --index-name test_1M_labelfilter \
+  --task-label "20260107" \
+  --m 16 \
+  --ef-con 128 \
+  --ef-search 128 \
+  --space-type cosine \
+  --precision int8d \
+  --version 1 \
+  --case-type LabelFilterPerformanceCase \
+  --dataset-with-size-type "Medium Cohere (768dim, 1M)" \
+  --label-percentage 0.01 \
+  --k 30 \
+  --num-concurrency "8" \
+  --concurrency-duration 30 \
+  --concurrency-timeout 3600 \
+  --skip-drop-old \
+  --skip-load \
   --search-concurrent \
   --search-serial

@@ -12,3 +12,8 @@ venv/
 .idea/
 results/
 logs/
+neighbors_labels_label_1p.csv
+vectordataset/
+vectordataset_label_filter/
+test_query.csv
+test_ids.txt

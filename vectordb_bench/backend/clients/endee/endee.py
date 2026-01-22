@@ -460,6 +460,7 @@ class Endee(VectorDB):
         """
         try:
             # print("Filter expression:",self.filter_expr)
+            # print("Query:", query)
             results = self.index.query(
                 vector=query,
                 top_k=k,
