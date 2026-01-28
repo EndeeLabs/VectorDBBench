@@ -32,11 +32,10 @@ class EndeeTypedDict(CommonTypedDict):
     ]
     space_type: Annotated[
         str, 
-        click.option("--space-type", type=click.Choice(["cosine", "l2", "dot_product"]), default="cosine", help="Distance metric", show_default=True)
+        click.option("--space-type", type=click.Choice(["cosine", "l2", "ip"]), default="cosine", help="Distance metric", show_default=True)
     ]
     precision: Annotated[
         str, 
-        # click.option("--precision", type=click.Choice(["medium", "high", "ultra-high", "fp16", "small"]), default="medium", help="Quant Level", show_default=True)
         click.option("--precision", type=click.Choice(["binary", "int4d", "int8d", "int16d", "float16", "float32"]), default="int8d", help="Quant Level", show_default=True)
     ]
     version: Annotated[
